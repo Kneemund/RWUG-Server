@@ -212,10 +212,10 @@ int main() {
 
         libevdev_uinput_write_event(uinput_device_imu, EV_ABS, ABS_X, json_object_get_double(accel_x) * 3600.);      //
         libevdev_uinput_write_event(uinput_device_imu, EV_ABS, ABS_Y, json_object_get_double(accel_y) * 3600.);      //
-        libevdev_uinput_write_event(uinput_device_imu, EV_ABS, ABS_Z, json_object_get_double(accel_z) * -3600.);     //
+        libevdev_uinput_write_event(uinput_device_imu, EV_ABS, ABS_Z, json_object_get_double(accel_z) * 3600.);     //
         libevdev_uinput_write_event(uinput_device_imu, EV_ABS, ABS_RX, json_object_get_double(gyro_x) * -3600.);     // pitch
         libevdev_uinput_write_event(uinput_device_imu, EV_ABS, ABS_RY, json_object_get_double(gyro_y) * 3600.);      // yaw
-        libevdev_uinput_write_event(uinput_device_imu, EV_ABS, ABS_RZ, json_object_get_double(gyro_z) * -3600.);     // roll
+        libevdev_uinput_write_event(uinput_device_imu, EV_ABS, ABS_RZ, json_object_get_double(gyro_z) * 3600.);     // roll
 
         // get time as micro seconds
         gettimeofday(&current_time, NULL);
