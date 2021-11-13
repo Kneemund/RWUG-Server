@@ -13,10 +13,10 @@
 #define PORT 4242
 #define MAXLINE 1024
 #define STICK_RADIUS 32767
-#define GYRO_RADIUS 32767   //  I am not too sure about those 4 values.
-#define ACCEL_RADIUS 32767  //  Tweaking them might be necessary
-#define ACCEL_RES 4096      //
-#define GYRO_RES 8          //
+#define GYRO_RADIUS 8388607 //  The gamepad supposedly sends 3 bytes per gyroscope axis. this is 2^23-1
+#define ACCEL_RADIUS 32767  //  2 bytes per accelerometer axis
+#define ACCEL_RES 8192      //  The data we get seems to be in G. I am only going with such high resolution for precision
+#define GYRO_RES 1000       //  Random value. 
 
 struct gamepad_button {
     int button_code;
@@ -210,12 +210,12 @@ int main() {
         json_object_object_get_ex(gamepad_data, "gyroY", &gyro_y);
         json_object_object_get_ex(gamepad_data, "gyroZ", &gyro_z);
 
-        libevdev_uinput_write_event(uinput_device_imu, EV_ABS, ABS_X, json_object_get_double(accel_x) * 3600.);      //
-        libevdev_uinput_write_event(uinput_device_imu, EV_ABS, ABS_Y, json_object_get_double(accel_y) * 3600.);      //
-        libevdev_uinput_write_event(uinput_device_imu, EV_ABS, ABS_Z, json_object_get_double(accel_z) * -3600.);     //
-        libevdev_uinput_write_event(uinput_device_imu, EV_ABS, ABS_RX, json_object_get_double(gyro_x) * -3600.);     // pitch
-        libevdev_uinput_write_event(uinput_device_imu, EV_ABS, ABS_RY, json_object_get_double(gyro_y) * 3600.);      // yaw
-        libevdev_uinput_write_event(uinput_device_imu, EV_ABS, ABS_RZ, json_object_get_double(gyro_z) * 3600.);     // roll
+        libevdev_uinput_write_event(uinput_device_imu, EV_ABS, ABS_X, json_object_get_double(accel_x) * -8192);      //
+        libevdev_uinput_write_event(uinput_device_imu, EV_ABS, ABS_Y, json_object_get_double(accel_y) * 8192);       //
+        libevdev_uinput_write_event(uinput_device_imu, EV_ABS, ABS_Z, json_object_get_double(accel_z) * -8192);      //
+        libevdev_uinput_write_event(uinput_device_imu, EV_ABS, ABS_RX, json_object_get_double(gyro_x) * -342500);    // pitch
+        libevdev_uinput_write_event(uinput_device_imu, EV_ABS, ABS_RY, json_object_get_double(gyro_y) * -342500);    // yaw     342.5 * GYRO_RES
+        libevdev_uinput_write_event(uinput_device_imu, EV_ABS, ABS_RZ, json_object_get_double(gyro_z) * 342500);     // roll    This number is random
 
         // get time as micro seconds
         gettimeofday(&current_time, NULL);
