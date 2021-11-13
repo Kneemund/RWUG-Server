@@ -8,16 +8,16 @@ The profile used should look like this :
 ```
 {
         "profiles": {
-                "wiiUGamepadServer": {
+                "WiiUGamepadServer": {
                         "gyroSensitivity": 1.0,
                         "accel": "x+y+z+",
-                        "gyro": "x+y-z+"
+                        "gyro": "x+y+z+"
                 }
         },
         "devices": [
                 {
                         "name": "Wii U Gamepad IMU",
-                        "profile": "wiiUGamepadServer"
+                        "profile": "WiiUGamepadServer"
                 }
         ]
 }
