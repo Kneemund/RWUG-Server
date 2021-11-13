@@ -1,5 +1,5 @@
 [package]
-name = "wii_u_gamepad_rust"
+name = "wii_u_gamepad_server"
 version = "0.1.0"
 authors = ["Kneemund <niemand@ymir-graphics.com>", "GatienDoesStuff <94007359+GatienDoesStuff@users.noreply.github.com>"]
 edition = "2018"
