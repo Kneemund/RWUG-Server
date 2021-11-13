@@ -1,9 +1,0 @@
-{
-    "files.associations": {
-        "libevdev-uinput.h": "c",
-        "libevdev.h": "c",
-        "string_view": "c",
-        "tuple": "c",
-        "condition_variable": "c"
-    }
-}

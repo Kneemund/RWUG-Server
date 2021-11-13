@@ -1,0 +1,15 @@
+[package]
+name = "wii_u_gamepad_rust"
+version = "0.1.0"
+authors = ["Kneemund <niemand@ymir-graphics.com>", "GatienDoesStuff <94007359+GatienDoesStuff@users.noreply.github.com>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+pad-motion = "0.1.6"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+ctrlc = "3.2.1"
+evdev-rs = "0.5.0"
+structopt = "0.3.13"
