@@ -9,34 +9,38 @@ use pad_motion::server::*;
 mod gamepad_data;
 use gamepad_data::{GamepadData, GAMEPAD_BUTTON_DATA};
 
-const PORT: u16 = 4242;
-const TIMEOUT_SECONDS: u64 = 5;
-
-const STICK_RADIUS: i32 = 32767;
 const NO_TIME: TimeVal = TimeVal { tv_sec: 0, tv_usec: 0 };
 
-fn register_axes(device: &UninitDevice) {
-    let stick_info = AbsInfo {
-        maximum: STICK_RADIUS,
-        minimum: -STICK_RADIUS,
-        flat: 0,
-        fuzz: 0,
-        resolution: 0,
-        value: 0,
-    };
+const STICK_RADIUS: f32 = 32767.0;
+const STICK_ABS_INFO: AbsInfo = AbsInfo {
+    maximum: STICK_RADIUS as i32,
+    minimum: -STICK_RADIUS as i32,
+    flat: 0,
+    fuzz: 0,
+    resolution: 0,
+    value: 0,
+};
 
-    device.enable_event_type(&EventType::EV_ABS).unwrap();
-    device.enable_event_code(&EventCode::EV_ABS(EV_ABS::ABS_X), Some(&stick_info)).unwrap();
-    device.enable_event_code(&EventCode::EV_ABS(EV_ABS::ABS_Y), Some(&stick_info)).unwrap();
-    device.enable_event_code(&EventCode::EV_ABS(EV_ABS::ABS_RX), Some(&stick_info)).unwrap();
-    device.enable_event_code(&EventCode::EV_ABS(EV_ABS::ABS_RY), Some(&stick_info)).unwrap();
+fn register_axes(device: &UninitDevice) {
+    // The ABS information has to be set twice, because enable_event_code() sends wrong data.
+    device.enable_event_code(&EventCode::EV_ABS(EV_ABS::ABS_X), Some(&STICK_ABS_INFO)).unwrap();
+    device.set_abs_info(&EventCode::EV_ABS(EV_ABS::ABS_X), &STICK_ABS_INFO);
+    device.enable_event_code(&EventCode::EV_ABS(EV_ABS::ABS_Y), Some(&STICK_ABS_INFO)).unwrap();
+    device.set_abs_info(&EventCode::EV_ABS(EV_ABS::ABS_Y), &STICK_ABS_INFO);
+    device.enable_event_code(&EventCode::EV_ABS(EV_ABS::ABS_RX), Some(&STICK_ABS_INFO)).unwrap();
+    device.set_abs_info(&EventCode::EV_ABS(EV_ABS::ABS_RX), &STICK_ABS_INFO);
+    device.enable_event_code(&EventCode::EV_ABS(EV_ABS::ABS_RY), Some(&STICK_ABS_INFO)).unwrap();
+    device.set_abs_info(&EventCode::EV_ABS(EV_ABS::ABS_RY), &STICK_ABS_INFO);
 }
 
 fn register_buttons(device: &UninitDevice) {
-    device.enable_event_type(&EventType::EV_KEY).unwrap();
     for button in GAMEPAD_BUTTON_DATA.iter() {
-        device.enable_event_code(&button.1, None).unwrap();
+        device.enable_event_code(button.1, None).unwrap();
     }
+}
+
+fn register_event_timestamp(device: &UninitDevice) {
+    device.enable_event_code(&EventCode::EV_MSC(EV_MSC::MSC_TIMESTAMP), None).unwrap();
 }
 
 pub struct GamepadServer {
@@ -50,7 +54,7 @@ impl GamepadServer {
     pub fn new(motion_server: Arc<Server>, address: SocketAddr, timeout: u64) -> GamepadServer {
         let socket = UdpSocket::bind(address).expect("Failed to bind UDP socket.");
         socket.set_read_timeout(Some(Duration::new(timeout, 0))).unwrap();
-        println!("Bound UDP socket at port {} with a timeout of {} seconds.", PORT, TIMEOUT_SECONDS);
+        println!("Bound UDP socket at {} with a timeout of {} seconds.", address, timeout);
 
         let uninit_device = UninitDevice::new().expect("Failed to create evdev device.");
         println!("Created evdev device.");
@@ -58,8 +62,7 @@ impl GamepadServer {
         uninit_device.set_name("Wii U Gamepad");
         register_buttons(&uninit_device);
         register_axes(&uninit_device);
-        uninit_device.enable_event_type(&EventType::EV_MSC).unwrap();
-        uninit_device.enable_event_code(&EventCode::EV_MSC(EV_MSC::MSC_TIMESTAMP), None).unwrap();
+        register_event_timestamp(&uninit_device);
         println!("Configured evdev device.");
 
         let uinput_device = UInputDevice::create_from_device(&uninit_device).expect("Failed to create UInput device.");
@@ -94,27 +97,26 @@ impl GamepadServer {
 
     fn update_button_data(&self, data: &GamepadData) {
         for button in GAMEPAD_BUTTON_DATA.iter() {
-            self.uinput_device
-                .write_event(&InputEvent::new(&NO_TIME, &button.1, ((data.wiiUGamePad.hold & button.0) != 0) as i32))
-                .unwrap();
+            let is_pressed = (data.wiiUGamePad.hold & button.0) != 0;
+            self.uinput_device.write_event(&InputEvent::new(&NO_TIME, button.1, is_pressed as i32)).unwrap();
         }
     }
 
     fn update_joystick_data(&self, data: &GamepadData) {
         self.uinput_device
-            .write_event(&InputEvent::new(&NO_TIME, &EventCode::EV_ABS(EV_ABS::ABS_X), (data.wiiUGamePad.lStickX * STICK_RADIUS as f32) as i32))
+            .write_event(&InputEvent::new(&NO_TIME, &EventCode::EV_ABS(EV_ABS::ABS_X), (data.wiiUGamePad.lStickX * STICK_RADIUS) as i32))
             .unwrap();
 
         self.uinput_device
-            .write_event(&InputEvent::new(&NO_TIME, &EventCode::EV_ABS(EV_ABS::ABS_Y), (data.wiiUGamePad.lStickY * -STICK_RADIUS as f32) as i32))
+            .write_event(&InputEvent::new(&NO_TIME, &EventCode::EV_ABS(EV_ABS::ABS_Y), (data.wiiUGamePad.lStickY * -STICK_RADIUS) as i32))
             .unwrap();
 
         self.uinput_device
-            .write_event(&InputEvent::new(&NO_TIME, &EventCode::EV_ABS(EV_ABS::ABS_RX), (data.wiiUGamePad.rStickX * STICK_RADIUS as f32) as i32))
+            .write_event(&InputEvent::new(&NO_TIME, &EventCode::EV_ABS(EV_ABS::ABS_RX), (data.wiiUGamePad.rStickX * STICK_RADIUS) as i32))
             .unwrap();
 
         self.uinput_device
-            .write_event(&InputEvent::new(&NO_TIME, &EventCode::EV_ABS(EV_ABS::ABS_RY), (data.wiiUGamePad.rStickY * -STICK_RADIUS as f32) as i32))
+            .write_event(&InputEvent::new(&NO_TIME, &EventCode::EV_ABS(EV_ABS::ABS_RY), (data.wiiUGamePad.rStickY * -STICK_RADIUS) as i32))
             .unwrap();
     }
 

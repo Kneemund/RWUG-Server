@@ -22,35 +22,25 @@ const BUTTON_STICK_L: u32 = 0x00040000;
 
 // const BUTTON_SYNC: u32 = 0x0001;
 // const BUTTON_TV: u32 = 0x00010000;
-// const STICK_R_EMULATION_LEFT: u32 = 0x04000000;
-// const STICK_R_EMULATION_RIGHT: u32 = 0x02000000;
-// const STICK_R_EMULATION_UP: u32 = 0x01000000;
-// const STICK_R_EMULATION_DOWN: u32 = 0x00800000;
-// const STICK_L_EMULATION_LEFT: u32 = 0x40000000;
-// const STICK_L_EMULATION_RIGHT: u32 = 0x20000000;
-// const STICK_L_EMULATION_UP: u32 = 0x10000000;
-// const STICK_L_EMULATION_DOWN: u32 = 0x08000000;
 
-pub struct GamepadButton(pub u32, pub EventCode);
-
-pub const GAMEPAD_BUTTON_DATA: [GamepadButton; 17] = [
-    GamepadButton(BUTTON_A, EventCode::EV_KEY(EV_KEY::BTN_EAST)),
-    GamepadButton(BUTTON_B, EventCode::EV_KEY(EV_KEY::BTN_SOUTH)),
-    GamepadButton(BUTTON_X, EventCode::EV_KEY(EV_KEY::BTN_WEST)),
-    GamepadButton(BUTTON_Y, EventCode::EV_KEY(EV_KEY::BTN_NORTH)),
-    GamepadButton(BUTTON_LEFT, EventCode::EV_KEY(EV_KEY::BTN_DPAD_LEFT)),
-    GamepadButton(BUTTON_RIGHT, EventCode::EV_KEY(EV_KEY::BTN_DPAD_RIGHT)),
-    GamepadButton(BUTTON_UP, EventCode::EV_KEY(EV_KEY::BTN_DPAD_UP)),
-    GamepadButton(BUTTON_DOWN, EventCode::EV_KEY(EV_KEY::BTN_DPAD_DOWN)),
-    GamepadButton(BUTTON_ZL, EventCode::EV_KEY(EV_KEY::BTN_TL2)),
-    GamepadButton(BUTTON_ZR, EventCode::EV_KEY(EV_KEY::BTN_TR2)),
-    GamepadButton(BUTTON_L, EventCode::EV_KEY(EV_KEY::BTN_TL)),
-    GamepadButton(BUTTON_R, EventCode::EV_KEY(EV_KEY::BTN_TR)),
-    GamepadButton(BUTTON_PLUS, EventCode::EV_KEY(EV_KEY::BTN_START)),
-    GamepadButton(BUTTON_MINUS, EventCode::EV_KEY(EV_KEY::BTN_SELECT)),
-    GamepadButton(BUTTON_HOME, EventCode::EV_KEY(EV_KEY::BTN_MODE)),
-    GamepadButton(BUTTON_STICK_R, EventCode::EV_KEY(EV_KEY::BTN_THUMBR)),
-    GamepadButton(BUTTON_STICK_L, EventCode::EV_KEY(EV_KEY::BTN_THUMBL)),
+pub const GAMEPAD_BUTTON_DATA: &[(u32, &EventCode)] = &[
+    (BUTTON_A, &EventCode::EV_KEY(EV_KEY::BTN_EAST)),
+    (BUTTON_B, &EventCode::EV_KEY(EV_KEY::BTN_SOUTH)),
+    (BUTTON_X, &EventCode::EV_KEY(EV_KEY::BTN_WEST)),
+    (BUTTON_Y, &EventCode::EV_KEY(EV_KEY::BTN_NORTH)),
+    (BUTTON_LEFT, &EventCode::EV_KEY(EV_KEY::BTN_DPAD_LEFT)),
+    (BUTTON_RIGHT, &EventCode::EV_KEY(EV_KEY::BTN_DPAD_RIGHT)),
+    (BUTTON_UP, &EventCode::EV_KEY(EV_KEY::BTN_DPAD_UP)),
+    (BUTTON_DOWN, &EventCode::EV_KEY(EV_KEY::BTN_DPAD_DOWN)),
+    (BUTTON_ZL, &EventCode::EV_KEY(EV_KEY::BTN_TL2)),
+    (BUTTON_ZR, &EventCode::EV_KEY(EV_KEY::BTN_TR2)),
+    (BUTTON_L, &EventCode::EV_KEY(EV_KEY::BTN_TL)),
+    (BUTTON_R, &EventCode::EV_KEY(EV_KEY::BTN_TR)),
+    (BUTTON_PLUS, &EventCode::EV_KEY(EV_KEY::BTN_START)),
+    (BUTTON_MINUS, &EventCode::EV_KEY(EV_KEY::BTN_SELECT)),
+    (BUTTON_HOME, &EventCode::EV_KEY(EV_KEY::BTN_MODE)),
+    (BUTTON_STICK_R, &EventCode::EV_KEY(EV_KEY::BTN_THUMBR)),
+    (BUTTON_STICK_L, &EventCode::EV_KEY(EV_KEY::BTN_THUMBL)),
 ];
 
 #[allow(non_snake_case)]
@@ -100,6 +90,11 @@ impl GamepadData {
             accelerometer_x: -self.wiiUGamePad.accX,
             accelerometer_y: self.wiiUGamePad.accY,
             accelerometer_z: -self.wiiUGamePad.accZ,
+
+            // left_stick_x: (self.wiiUGamePad.lStickX * 128.0 + 128.0) as u8,
+            // left_stick_y: (self.wiiUGamePad.lStickY * 128.0 + 128.0) as u8,
+            // right_stick_x: (self.wiiUGamePad.rStickX * 128.0 + 128.0) as u8,
+            // right_stick_y: (self.wiiUGamePad.rStickY * 128.0 + 128.0) as u8,
 
             // The id might have to be incremented after every touch, but it seems to work like this too.
             first_touch: TouchData {
