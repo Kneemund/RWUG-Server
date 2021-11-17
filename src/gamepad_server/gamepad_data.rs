@@ -16,11 +16,11 @@ const BUTTON_L: u32 = 0x0020;
 const BUTTON_R: u32 = 0x0010;
 const BUTTON_PLUS: u32 = 0x0008;
 const BUTTON_MINUS: u32 = 0x0004;
-const BUTTON_HOME: u32 = 0x0002;
 const BUTTON_STICK_R: u32 = 0x00020000;
 const BUTTON_STICK_L: u32 = 0x00040000;
 
 // const BUTTON_SYNC: u32 = 0x0001;
+// const BUTTON_HOME: u32 = 0x0002;
 // const BUTTON_TV: u32 = 0x00010000;
 
 pub const GAMEPAD_BUTTON_DATA: &[(u32, &EventCode)] = &[
@@ -38,7 +38,6 @@ pub const GAMEPAD_BUTTON_DATA: &[(u32, &EventCode)] = &[
     (BUTTON_R, &EventCode::EV_KEY(EV_KEY::BTN_TR)),
     (BUTTON_PLUS, &EventCode::EV_KEY(EV_KEY::BTN_START)),
     (BUTTON_MINUS, &EventCode::EV_KEY(EV_KEY::BTN_SELECT)),
-    (BUTTON_HOME, &EventCode::EV_KEY(EV_KEY::BTN_MODE)),
     (BUTTON_STICK_R, &EventCode::EV_KEY(EV_KEY::BTN_THUMBR)),
     (BUTTON_STICK_L, &EventCode::EV_KEY(EV_KEY::BTN_THUMBL)),
 ];

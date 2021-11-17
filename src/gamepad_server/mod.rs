@@ -45,13 +45,12 @@ fn register_event_timestamp(device: &UninitDevice) {
 
 pub struct GamepadServer {
     socket: UdpSocket,
-    motion_server: Arc<Server>,
     uinput_device: UInputDevice,
     created_time: Instant,
 }
 
 impl GamepadServer {
-    pub fn new(motion_server: Arc<Server>, address: SocketAddr, timeout: u64) -> GamepadServer {
+    pub fn new(address: SocketAddr, timeout: u64) -> GamepadServer {
         let socket = UdpSocket::bind(address).expect("Failed to bind UDP socket.");
         socket.set_read_timeout(Some(Duration::new(timeout, 0))).unwrap();
         println!("Bound UDP socket at {} with a timeout of {} seconds.", address, timeout);
@@ -60,6 +59,7 @@ impl GamepadServer {
         println!("Created evdev device.");
 
         uninit_device.set_name("Wii U Gamepad");
+        uninit_device.set_bustype(0x06); // BUS_VIRTUAL
         register_buttons(&uninit_device);
         register_axes(&uninit_device);
         register_event_timestamp(&uninit_device);
@@ -72,11 +72,10 @@ impl GamepadServer {
             socket,
             created_time: Instant::now(),
             uinput_device,
-            motion_server,
         };
     }
 
-    pub fn start(&self, countinue_running: &Arc<AtomicBool>) {
+    pub fn start(&self, optional_dsu_server: &Option<Arc<Server>>, countinue_running: &Arc<AtomicBool>) {
         let mut buffer = [0; 1024];
         while countinue_running.load(Ordering::SeqCst) {
             match self.socket.recv_from(&mut buffer) {
@@ -88,7 +87,9 @@ impl GamepadServer {
                     self.update_joystick_data(&data);
                     self.synchronize(elapsed_microseconds as u16);
 
-                    self.motion_server.update_controller_data(0, data.to_controller_data(elapsed_microseconds));
+                    if let Some(dsu_server) = optional_dsu_server {
+                        dsu_server.update_controller_data(0, data.to_controller_data(elapsed_microseconds));
+                    }
                 }
                 _ => (),
             }
