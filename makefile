@@ -1,5 +1,5 @@
 build:
-	gcc -std=c99 -Wall -g src/main.c -I/usr/include/libevdev-1.0/ -levdev -ljson-c -o wiiUGamepadServer
+	gcc -std=c99 -Wall -Ofast src/main.c -I/usr/include/libevdev-1.0/ -levdev -ljson-c -o rwug
 
 clean:
-	rm -f wiiUGamepadServer
+	rm -f rwug
