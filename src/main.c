@@ -8,18 +8,19 @@
 #include <libevdev/libevdev-uinput.h>
 #include <json-c/json.h>
 
-#include "gamepad_button_code.h"
+#include "udp_socket.h"
+#include "gamepad_button.h"
 
 #define PORT 4242
 #define MAXLINE 1024
 
 #define STICK_RADIUS 32767
 
-#define GYROSCOPE_RADIUS 8388607  //  The gamepad supposedly sends 3 bytes per gyroscope axis. This is 2^23-1.
-#define GYROSCOPE_RESOLUTION 1000 //  Random value.
+#define GYROSCOPE_RADIUS 8388607  // The gamepad supposedly sends 3 bytes per gyroscope axis. This is 2^23-1.
+#define GYROSCOPE_RESOLUTION 1000 // Random value.
 
-#define ACCELEROMETER_RADIUS 32767    //  2 bytes per accelerometer axis.
-#define ACCELEROMETER_RESOLUTION 8192 //  The data we get seems to be in G. I am only going with such high resolution for precision.
+#define ACCELEROMETER_RADIUS 32767    // 2 bytes per accelerometer axis.
+#define ACCELEROMETER_RESOLUTION 8192 // The data we get seems to be in G. I am only going with such high resolution for precision.
 
 void register_axes(struct libevdev *device) {
     struct input_absinfo stick_info;
@@ -70,28 +71,6 @@ void register_gyro(struct libevdev *device) {
     libevdev_enable_event_code(device, EV_ABS, ABS_RZ, &gyro_info);
 }
 
-int setup_udp_socket(int* socket_fd, int port) {
-    if ((*socket_fd = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
-        perror("Failed to create socket.");
-        return EXIT_FAILURE;
-    }
-
-    struct sockaddr_in server_address;
-    memset(&server_address, 0, sizeof(server_address));
-
-    server_address.sin_family = AF_INET;
-    server_address.sin_addr.s_addr = INADDR_ANY;
-    server_address.sin_port = htons(port);
-
-    if (bind(*socket_fd, (const struct sockaddr*) &server_address, sizeof(server_address)) < 0) {
-        perror("Failed to bind socket.");
-        return EXIT_FAILURE;
-    }
-
-    printf("UDP server listening on port %d.\n", port);
-    return EXIT_SUCCESS;
-}
-
 int main() {
     struct libevdev *device, *device_imu;
     struct libevdev_uinput *uinput_device, *uinput_device_imu;
@@ -99,7 +78,6 @@ int main() {
     struct timeval current_time;
     int elapsed_time = 0;
 
-    int socket_fd;
     char buffer[MAXLINE];
 
     struct json_object *gamepad_data, *trigger_data, *release_data;
@@ -148,11 +126,12 @@ int main() {
     printf("Registered uinput motion device at %s.\n", libevdev_uinput_get_devnode(uinput_device_imu));
 
 
-    if (setup_udp_socket(&socket_fd, PORT) < 0) return EXIT_FAILURE;
+    int udp_socket = init_udp_socket(PORT);
+    if (udp_socket < 0) return EXIT_FAILURE;
 
 
     while (1) {
-        buffer[recv(socket_fd, (char*) buffer, MAXLINE, MSG_WAITALL)] = '\0';
+        buffer[recv(udp_socket, (char*) buffer, MAXLINE, MSG_WAITALL)] = '\0';
         gamepad_data = json_tokener_parse(buffer);
 
         // buttons
@@ -211,7 +190,7 @@ int main() {
         while (json_object_put(gamepad_data) != 1);
     }
 
-
+    destroy_udp_socket(&udp_socket);
     libevdev_uinput_destroy(uinput_device);
     libevdev_free(device);
     return EXIT_SUCCESS;
