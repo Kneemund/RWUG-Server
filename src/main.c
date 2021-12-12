@@ -8,8 +8,11 @@
 #include <libevdev/libevdev-uinput.h>
 #include <json-c/json.h>
 
+#include <gio/gio.h>
+
 #include "udp_socket.h"
 #include "gamepad_button.h"
+#include "dbus_portal.h"
 
 #define PORT 4242
 #define MAXLINE 1024
@@ -71,6 +74,8 @@ void register_gyro(struct libevdev *device) {
     libevdev_enable_event_code(device, EV_ABS, ABS_RZ, &gyro_info);
 }
 
+
+
 int main() {
     struct libevdev *device, *device_imu;
     struct libevdev_uinput *uinput_device, *uinput_device_imu;
@@ -83,6 +88,23 @@ int main() {
     struct json_object *gamepad_data, *trigger_data, *release_data;
     struct json_object *l_stick_x, *l_stick_y, *r_stick_x, *r_stick_y;
     struct json_object *acc_x, *acc_y, *acc_z, *gyro_x, *gyro_y, *gyro_z;
+
+    GError *error = NULL;;
+    dbus_data_struct dbus_data = {NULL, NULL, malloc(64 * sizeof(char))};
+
+    dbus_data.connection = g_bus_get_sync(G_BUS_TYPE_SESSION, NULL, &error);
+    g_assert_no_error(error);
+
+    dbus_data.proxy = g_dbus_proxy_new_sync(dbus_data.connection, G_DBUS_PROXY_FLAGS_DO_NOT_LOAD_PROPERTIES, NULL, "org.freedesktop.portal.Desktop", "/org/freedesktop/portal/desktop", "org.freedesktop.portal.ScreenCast", NULL, &error);
+    g_assert_no_error(error);
+    
+    create_session(&dbus_data);
+
+    while(runmaincontext == 1) {
+        g_main_context_iteration(g_main_context_default(), TRUE);
+    }
+    printf("done\n");
+
 
     // setup input device
     device = libevdev_new();
