@@ -15,7 +15,6 @@ int runmaincontext = 1;
 
 
 // Quick explanation : we run the glib mainloop in main(), while functions are calling each other asynchronously.
-// It goes like this : 
 // This is required, because else, it isn't possible to get a callback, ever.
 // Once we get a callback for our last dbus method call (OpenPipeWireRemote()), we can release the mainloop
 
