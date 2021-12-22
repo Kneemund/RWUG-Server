@@ -4,6 +4,12 @@
         "libevdev.h": "c",
         "string_view": "c",
         "tuple": "c",
-        "condition_variable": "c"
+        "condition_variable": "c",
+        "json.h": "c",
+        "types.h": "c",
+        "in.h": "c",
+        "unistd.h": "c",
+        "uinput.h": "c",
+        "chrono": "c"
     }
 }
